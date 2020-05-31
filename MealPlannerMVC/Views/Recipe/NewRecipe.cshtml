@@ -1,0 +1,55 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    
+    <link type="text/css" rel="stylesheet" href="~/css/style.css">
+    <title>Budgety</title>
+</head>
+<body>
+    <h2>New Recipe</h2>
+    <div>
+
+        <div>
+            <input type="text" class="add__recipename" placeholder="Recipe Name">
+        </div>
+        <div>
+            <input type="text" class="add__description" placeholder="Description">
+        </div>
+        <h3>Ingredients</h3>
+        <div class="ingredients_list">
+            <div class="ingredient_item" id="ingredient-1">
+                <input type="text" class="add__ingredient_quantity" placeholder="Quantity" onkeypress="this.style.width = ((this.value.length + 3) * 10) + 'px';">
+                <input type="text" class="add__ingredient_measure" placeholder="Measure unit" onkeypress="this.style.width = ((this.value.length + 3) * 10) + 'px';">
+                <input type="text" class="add__ingredient_name" placeholder="Ingredient name" onkeypress="this.style.width = ((this.value.length + 3) * 10) + 'px';">
+                <button class="delete__btn" >-</button> 
+            </div>
+            
+            @*<div class="ingredient_item" id="ingredient-2">
+                <input type="text" class="add__ingredient_quantity" placeholder="Mennyiség">
+                <input type="text" class="add__ingredient_measure" placeholder="Egység">
+                <input type="text" class="add__ingredient_name" placeholder="Hozzávaló">
+            </div>*@
+        </div>
+        <div> <button class="new_ingredient_line__btn">+</button> </div>
+        <h3>Steps</h3>
+        <div class="recipe_step_list">
+            <div class="recipe_step" id="step-1">
+                <textarea  id="step_text-1" class="step_text" row="4"></textarea>
+                <button id="delete__btn-1">-</button>
+
+            </div>
+            
+            @*<div class="recipe_step" id="step-2">
+                <input type="text" class="step_text" placeholder="">
+
+            </div>*@
+        </div><div> <button class="new_step_line__btn">+</button> </div>
+        <div>
+            <button class="Post__btn">OK</button>
+        </div>
+    </div>
+    <script src="~/js/newRecipe.js" ></script>
+    
+</body>
+</html>
