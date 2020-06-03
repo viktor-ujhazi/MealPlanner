@@ -54,6 +54,32 @@ namespace MealPlannerMVC.Controllers
 
             return Redirect("Login");
         }
+        
+        [AllowAnonymous]
+        [HttpGet]
+        public IActionResult RegisterShop()
+        {
+            return View();
+        }
+
+        [AllowAnonymous]
+        [HttpPost]
+        public IActionResult RegisterShop(RegisterShopModel register)
+        {
+
+
+            try
+            {
+                _accountsService.RegisterShop(register);
+            }
+            catch (Npgsql.PostgresException)
+            {
+
+                return Redirect("InvalidUsername");
+            }
+
+            return Redirect("Login");
+        }
 
         public IActionResult InvalidUsername()
         {
@@ -82,6 +108,7 @@ namespace MealPlannerMVC.Controllers
                         new Claim("Id", account.UserID.ToString()),
                         new Claim("Email", account.Email),
                         new Claim("Username", account.Username),
+                        new Claim("Role", account.Role)
                     }, CookieAuthenticationDefaults.AuthenticationScheme)),
                     new AuthenticationProperties());
                 return Redirect($"../Home/Index");

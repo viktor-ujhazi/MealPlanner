@@ -5,27 +5,8 @@
 
     <div class="container">
 
-        <p>@ViewBag.Recipe.RecipeID</p>
-        <p>@ViewBag.Recipe.RecipeName</p>
-        <p>@ViewBag.Recipe.Description</p>
-
-        <h3>Hozzávalók:</h3>
-        @foreach (var ingredients in ViewBag.Recipe.Ingredients)
-        {
-            <p>
-                @ingredients.Quantity.MeasurementQuantity
-                @ingredients.Quantity.MeasurementUnit
-                @ingredients.IngredientName
-
-            </p>
-        }
-        <h3>Elkészítés:</h3>
-        @foreach (var step in ViewBag.Recipe.Steps)
-        {
-            <p>@step.StepNumber :  @step.StepText</p>
-        }
-
-
+        <p>@Html.ActionLink("all ingredients", "Ingredients", "Recipe")</p>
+        <p>@Html.ActionLink("all measurement unit", "MeasurementUnits", "Recipe")</p>
 
     </div>
 

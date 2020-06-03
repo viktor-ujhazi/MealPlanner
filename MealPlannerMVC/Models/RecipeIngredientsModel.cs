@@ -4,6 +4,8 @@
     {
         public int IngredientID { get; set; }
         public string IngredientName { get; set; }
-        public IngredientQuantityModel Quantity { get; set; }
+        public double MeasurementQuantity { get; set; }
+        public string MeasurementUnit { get; set; }
+        
     }
 }

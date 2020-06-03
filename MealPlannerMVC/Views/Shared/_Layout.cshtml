@@ -23,7 +23,7 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Recipe" asp-action="List">All Recipe</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Recipe" asp-action="Recipes">All Recipe</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
@@ -33,7 +33,20 @@
                             <li class="nav-item">
                                 <a class="nav-link text-info" asp-area="" asp-controller="Recipe" asp-action="NewRecipe">New Recipe</a>
                             </li>
+                            @if (Context.User.FindFirstValue("Role") == "user")
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-info" asp-area="" asp-controller="UserInventory" asp-action="Inventory">Inventory</a>
+                                </li>
 
+                            }
+                            @if (Context.User.FindFirstValue("Role") == "shop")
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-info" asp-area="" asp-controller="ShopInventory" asp-action="Inventory">Shop Inventory</a>
+                                </li>
+
+                            }
                         }
                     </ul>
                     <ul class="navbar-nav flex-grow-2">

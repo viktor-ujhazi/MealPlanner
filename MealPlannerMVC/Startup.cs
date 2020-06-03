@@ -52,8 +52,11 @@ namespace MealPlannerMVC
             });
             services.AddScoped<IRecipesService, SQLRecipesService>();
             services.AddScoped<IAccountsService, SQLAccountsService>();
+            services.AddScoped<IShopInventoryService, SQLShopInventoryService>();
+            services.AddScoped<IUserInventoryService, SQLUserInventoryService>();
 
-            
+
+
 
 
         }

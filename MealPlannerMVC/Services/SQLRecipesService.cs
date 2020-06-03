@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace MealPlannerMVC.Services
@@ -32,16 +33,13 @@ namespace MealPlannerMVC.Services
         }
         private RecipeIngredientsModel ToIngredient(IDataReader reader)
         {
-            IngredientQuantityModel quantity = new IngredientQuantityModel
-            {
-                MeasurementQuantity = (double)reader["quantity_amount"],
-                MeasurementUnit = (string)reader["measurement_unit_text"]
-            };
+            
             return new RecipeIngredientsModel
             {
                 IngredientName = (string)reader["ingredient_name"],
-                Quantity = quantity
-
+                MeasurementQuantity = (double)reader["quantity_amount"],
+                MeasurementUnit = (string)reader["measurement_unit_text"]
+                
             };
         }
 
@@ -66,7 +64,11 @@ namespace MealPlannerMVC.Services
             using var reader = command.ExecuteReader();
 
             reader.Read();
-            return RecipeModelFromData(reader, steps, ingredients);
+            var recipe = RecipeModelFromData(reader, steps, ingredients);
+            var jsonString = JsonSerializer.Serialize<RecipeModel>(recipe);
+            Console.WriteLine(jsonString);
+
+            return recipe;
 
         }
         private List<RecipeSteps> GetSteps(int id)
@@ -82,7 +84,7 @@ namespace MealPlannerMVC.Services
             command.Parameters.Add(param);
             using var reader = command.ExecuteReader();
 
-            
+
             while (reader.Read())
             {
                 steps.Add(ToSteps(reader));
@@ -90,11 +92,11 @@ namespace MealPlannerMVC.Services
             return steps;
         }
 
-        private List<RecipeIngredientsModel> GetIngredients(int id) 
+        private List<RecipeIngredientsModel> GetIngredients(int id)
         {
             List<RecipeIngredientsModel> ingredientsModels = new List<RecipeIngredientsModel>();
             using var command = _connection.CreateCommand();
-            command.CommandText =   $"SELECT ingredients.ingredient_name, measurement_quantities.quantity_amount, measurement_units.measurement_unit_text " +
+            command.CommandText = $"SELECT ingredients.ingredient_name, measurement_quantities.quantity_amount, measurement_units.measurement_unit_text " +
                                     "FROM recipe_ingredients " +
                                     "JOIN ingredients on ingredients.ingredient_id = recipe_ingredients.ingredient_id " +
                                     "JOIN measurement_quantities on recipe_ingredients.measurement_quantity_id = measurement_quantities.measurement_quantity_id " +
@@ -114,7 +116,7 @@ namespace MealPlannerMVC.Services
                 ingredientsModels.Add(ToIngredient(reader));
             }
             return ingredientsModels;
-                        
+
         }
 
         public List<RecipeModel> GetRecipes()
@@ -122,7 +124,7 @@ namespace MealPlannerMVC.Services
             List<RecipeModel> recipes = new List<RecipeModel>();
             using var command = _connection.CreateCommand();
             command.CommandText = "SELECT * FROM recipes ";
-                        
+
             using var reader = command.ExecuteReader();
 
             while (reader.Read())
@@ -134,8 +136,162 @@ namespace MealPlannerMVC.Services
                     Description = (string)reader["description"],
                 };
                 recipes.Add(recipe);
+                
             }
+            
             return recipes;
+        }
+
+        public List<RecipeIngredientsModel> GetALLIngredients()
+        {
+            List<RecipeIngredientsModel> ingredients = new List<RecipeIngredientsModel>();
+            using var command = _connection.CreateCommand();
+            command.CommandText = "SELECT * FROM ingredients ";
+
+            using var reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                RecipeIngredientsModel ingredient = new RecipeIngredientsModel
+                {
+                    IngredientID = (int)reader["ingredient_id"],
+                    IngredientName = (string)reader["ingredient_name"],
+
+
+                };
+                ingredients.Add(ingredient);
+            }
+            return ingredients;
+        }
+
+        public List<string> GetALLMeasurementUnits()
+        {
+            List<string> measurementUnits = new List<string>();
+            using var command = _connection.CreateCommand();
+            command.CommandText = "SELECT * FROM measurement_units ";
+
+            using var reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+
+                string measurementUnit = (string)reader["measurement_unit_text"];
+                measurementUnits.Add(measurementUnit);
+            }
+            return measurementUnits;
+        }
+
+
+        public void AddRecipe(string jsonRecipe)
+        {
+            RecipeModel newRecipe = JsonSerializer.Deserialize<RecipeModel>(jsonRecipe);
+            using var command = _connection.CreateCommand();
+            
+            var recipeNameParam = command.CreateParameter();
+            recipeNameParam.ParameterName = "recipeName";
+            recipeNameParam.Value = newRecipe.RecipeName;
+
+            var descriptionParam = command.CreateParameter();
+            descriptionParam.ParameterName = "recipeDescription";
+            descriptionParam.Value = newRecipe.Description;
+
+            var stepNumbersParam = command.CreateParameter();
+            stepNumbersParam.ParameterName = "step_numbers";
+            stepNumbersParam.Value = getStepnumbers(newRecipe.Steps);
+            
+            var stepsParam = command.CreateParameter();
+            stepsParam.ParameterName = "steps";
+            stepsParam.Value = getStepText(newRecipe.Steps); 
+
+            var IngredientNamesParam = command.CreateParameter();
+            IngredientNamesParam.ParameterName = "i_name";
+            IngredientNamesParam.Value = getIngredientName(newRecipe.Ingredients);
+
+            var IngredientQuantitiesParam = command.CreateParameter();
+            IngredientQuantitiesParam.ParameterName = "i_quantity";
+            IngredientQuantitiesParam.Value = getIngredientQuantity(newRecipe.Ingredients);
+
+            var IngredientUnitsParam = command.CreateParameter();
+            IngredientUnitsParam.ParameterName = "i_measurement_unit";
+            IngredientUnitsParam.Value = getIngredientUnit(newRecipe.Ingredients);
+
+                                            
+            command.CommandText = "SELECT new_recipe(@recipeName, @recipeDescription,  @step_numbers, @steps, @i_name, @i_quantity, @i_measurement_unit)";
+
+            command.Parameters.Add(recipeNameParam);
+            command.Parameters.Add(descriptionParam);
+            command.Parameters.Add(stepNumbersParam);
+            command.Parameters.Add(stepsParam);
+            command.Parameters.Add(IngredientNamesParam);
+            command.Parameters.Add(IngredientQuantitiesParam);
+            command.Parameters.Add(IngredientUnitsParam);
+                                 
+            command.ExecuteNonQuery();
+        }
+        private int[] getStepnumbers(List<RecipeSteps> recipeSteps)
+        {
+            
+            List<int> stepnumbers = new List<int>();
+            foreach (var item in recipeSteps)
+            {
+
+                stepnumbers.Add(item.StepNumber);
+            }
+            int[] resultArray = stepnumbers.ToArray();
+
+            return resultArray;
+        }
+        private string[] getStepText(List<RecipeSteps> recipeSteps)
+        {
+
+            List<string> steptexts = new List<string>();
+            foreach (var item in recipeSteps)
+            {
+
+                steptexts.Add(item.StepText);
+            }
+            string[] resultArray = steptexts.ToArray();
+
+            return resultArray;
+        }
+        private string[] getIngredientName(List<RecipeIngredientsModel> ingredients)
+        {
+
+            List<string> ingredientNames = new List<string>();
+            foreach (var item in ingredients)
+            {
+
+                ingredientNames.Add(item.IngredientName);
+            }
+            string[] resultArray = ingredientNames.ToArray();
+
+            return resultArray;
+        }
+        private string[] getIngredientUnit(List<RecipeIngredientsModel> ingredients)
+        {
+
+            List<string> ingredientUnit = new List<string>();
+            foreach (var item in ingredients)
+            {
+
+                ingredientUnit.Add(item.MeasurementUnit);
+            }
+            string[] resultArray = ingredientUnit.ToArray();
+
+            return resultArray;
+        }
+        private double[] getIngredientQuantity(List<RecipeIngredientsModel> ingredients)
+        {
+
+            List<double> ingredientQuantity = new List<double>();
+            foreach (var item in ingredients)
+            {
+
+                ingredientQuantity.Add(item.MeasurementQuantity);
+            }
+            double[] resultArray = ingredientQuantity.ToArray();
+
+            return resultArray;
         }
     }
 }

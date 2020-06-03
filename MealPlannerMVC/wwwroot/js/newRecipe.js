@@ -42,9 +42,7 @@ function newIngredient() {
     let ingredientForm = document.createElement('div');
     ingredientForm.setAttribute('class', 'ingredient_item');
     ingredientForm.setAttribute('id', `ingredient-${ingredientCount}`);
-
-
-    
+           
     //html = `<div class="ingredient_item" id="ingredient-%count%"><input type = "text" class="add__ingredient_quantity" placeholder = "Quantity" onkeypress = "this.style.width = ((this.value.length + 3) * 10) + 'px';" ><input type="text" class="add__ingredient_measure" placeholder="Measure unit" onkeypress="this.style.width = ((this.value.length + 3) * 10) + 'px';"><input type="text" class="add__ingredient_name" placeholder="Ingredient name" onkeypress="this.style.width = ((this.value.length + 3) * 10) + 'px';"><button class="delete__btn" >-</button></div>`
     //newHtml = html.replace('%count%', count);
     
@@ -73,9 +71,7 @@ function newIngredient() {
     ingredientForm.appendChild(deleteButton);
 
     element.appendChild(ingredientForm);
-
-
-
+       
     ingredientCount++;
 }
 
@@ -93,8 +89,7 @@ function newStep() {
     step_text_input.setAttribute('id', `step_text-${rowNumber}`);
         
     step_text_input.setAttribute('row', 4)
-    
-    
+        
     let deleteButton = document.createElement('button');
     deleteButton.setAttribute('id', `delete__btn-${rowNumber}`);
     deleteButton.innerHTML = '-';
@@ -106,12 +101,11 @@ function newStep() {
 
     element.appendChild(stepForm);
 
-
-
     stepCount++;
 }
 
 function postRecipe() {
+
     let recipeName, recipeDescription;
     let recipeSteps = [];
     let recipeIngredients = [];
@@ -124,76 +118,48 @@ function postRecipe() {
     var steps = document.querySelectorAll("[id^=step_text]");
 
     for (var i = 0; i < steps.length; i++) {
-        
+        let step_line = {};
         let stepnumber = i + 1;
         let steptext = steps[i].value;
-        recipeSteps.push({
-            key: stepnumber,
-            value: steptext
-        });
-        
+
+        step_line['StepNumber'] = stepnumber;
+        step_line['StepText'] = steptext;
+
+        recipeSteps.push(step_line);
     }
     var ingredients = document.querySelectorAll("[id^=ingredient-]");
     for (var i = 0; i < ingredients.length; i++) {
-        let ingredient_line = [];
+        let ingredient_line = {};
         let ingredient_quantity = ingredients[i].querySelector('.add__ingredient_quantity').value;
         let ingredient_measure = ingredients[i].querySelector('.add__ingredient_measure').value;
         let ingredient_name = ingredients[i].querySelector('.add__ingredient_name').value;
 
-        ingredient_line.push({
-            key: 'ingredientQuantity',
-            value: ingredient_quantity
-        });
-        ingredient_line.push({
-            key: 'ingredientMeasure',
-            value: ingredient_measure
-        });
-        ingredient_line.push({
-            key: 'ingredientName',
-            value: ingredient_name
-        });
+        ingredient_line['MeasurementQuantity'] = parseFloat(ingredient_quantity);
+        ingredient_line['MeasurementUnit'] = ingredient_measure;
+        ingredient_line['IngredientName'] = ingredient_name;
 
-        recipeIngredients.push({
-            key: i + 1,
-            value: ingredient_line
-        });
-
+        recipeIngredients.push(ingredient_line);
     }
-    console.log(recipeIngredients);
-    console.log(recipeSteps);
-
-
+        
     data.append('recipeName',recipeName);
     data.append('recipeDescription',recipeDescription);
-    data.append('recipeIngredients',recipeIngredients);
-    data.append('recipeSteps',recipeSteps);
+    data.append('recipeIngredients', JSON.stringify(recipeIngredients));
+    data.append('recipeSteps', JSON.stringify(recipeSteps));
+           
     let xhr = new XMLHttpRequest();
-    xhr.open('POST', 'Slot/TaskToSlot', true);
+    if (xhr != null) {
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                if (xhr.responseText === "OK") {
+                    alert('success')
+                }
+            }
+        }
+    }
+    xhr.open('POST', 'AddRecipe', true);
     xhr.send(data);
+};
 
+       
 
-    //var recipe = {
-    //    name: 'recept',
-    //    description: 'leírás',
-    //    recipeSteps: {
-    //        step1: {
-    //            stepnumber: 1,
-    //            steptext:'1. lépés'
-    //        },
-    //        step2: {
-    //            stepnumber: 2,
-    //            steptext: '2. lépés'
-    //        }
-    //    }
-    //};
     
-
-    //data.append('recipeName', recipeName);
-    //data.append('recipeDescription', recipeDescription);
-    //for (var pair of data.entries()) {
-    //    console.log(pair[0] + ', ' + pair[1]);
-    //}
-
-    //console.log(recipe);
-
-}

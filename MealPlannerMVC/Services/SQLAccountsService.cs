@@ -49,6 +49,47 @@ namespace MealPlannerMVC.Services
             command.ExecuteNonQuery();
         }
 
+        public void RegisterShop(RegisterShopModel register)
+        {
+            using var command = _connection.CreateCommand();
+
+            var usernameParam = command.CreateParameter();
+            usernameParam.ParameterName = "username";
+            usernameParam.Value = register.ShopName;
+
+            var emailParam = command.CreateParameter();
+            emailParam.ParameterName = "email";
+            emailParam.Value = register.Email;
+
+            var passwordParam = command.CreateParameter();
+            passwordParam.ParameterName = "password";
+            passwordParam.Value = register.Password;
+
+            var cityParam = command.CreateParameter();
+            cityParam.ParameterName = "city";
+            cityParam.Value = register.City;
+
+            var addressParam = command.CreateParameter();
+            addressParam.ParameterName = "address";
+            addressParam.Value = register.Address;
+
+            var userRoleParam = command.CreateParameter();
+            userRoleParam.ParameterName = "user_role";
+            userRoleParam.Value = "shop";
+
+            command.CommandText = @"INSERT INTO users (username, email, password, city, address, user_role ) VALUES (@username, @email, @password, @city, @address, @user_role)";
+            command.Parameters.Add(usernameParam);
+            command.Parameters.Add(passwordParam);
+            command.Parameters.Add(emailParam);
+            command.Parameters.Add(cityParam);
+            command.Parameters.Add(addressParam);
+            command.Parameters.Add(userRoleParam);
+
+            command.ExecuteNonQuery();
+        }
+        
+
+
         public Account Login(string email, string password)
         {
             using var command = _connection.CreateCommand();
