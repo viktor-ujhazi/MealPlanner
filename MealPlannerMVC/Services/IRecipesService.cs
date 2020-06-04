@@ -6,9 +6,11 @@ namespace MealPlannerMVC.Services
     public interface IRecipesService
     {
         RecipeModel GetRecipe(int id);
-        public List<RecipeModel> GetRecipes();
-        public List<RecipeIngredientsModel> GetALLIngredients();
-        public List<string> GetALLMeasurementUnits();
-        public void AddRecipe(string jsonRecipe);
+        List<RecipeModel> GetRecipes();
+        List<RecipeIngredientsModel> GetALLIngredients();
+        List<string> GetALLMeasurementUnits();
+        void AddRecipe(string jsonRecipe);
+        List<RecipeModel> SearchRecipes(string recipename);
+        List<RecipeIngredientsModel> GetIngredients(int id);
     }
 }

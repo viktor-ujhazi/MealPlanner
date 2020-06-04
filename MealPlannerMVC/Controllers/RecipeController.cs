@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using MealPlannerMVC.Models;
 using MealPlannerMVC.Services;
@@ -67,8 +68,9 @@ namespace MealPlannerMVC.Controllers
             var recipeDescription = Request.Form["recipeDescription"];
             var steps = Request.Form["recipeSteps"];
             var ingredients = Request.Form["recipeIngredients"];
+            var userID = Convert.ToInt32(HttpContext.User.FindFirst("Id").Value);
                        
-            string jsonString = $"{{\"RecipeID\":0,\"RecipeName\":\"{recipeName}\", \"Description\":\"{recipeDescription}\", " +
+            string jsonString = $"{{\"RecipeID\":0,\"RecipeName\":\"{recipeName}\", \"Description\":\"{recipeDescription}\",  \"UserID\":{userID}," +
                 $"\"Steps\": {steps} ," +
                 $"\"Ingredients\": {ingredients}}}";
                 
@@ -79,5 +81,6 @@ namespace MealPlannerMVC.Controllers
             return Json("OK");
         }
 
+        
     }
 }

@@ -1,0 +1,13 @@
+
+
+.left_panel {
+    margin: auto;
+        
+    float: left;
+}
+
+.right_panel {
+    margin: auto;
+    float: right;
+    margin-right: 5px;
+}

@@ -10,6 +10,7 @@ namespace MealPlannerMVC.Models
         public int RecipeID { get; set; }
         public string RecipeName { get; set; }
         public string Description { get; set; }
+        public int UserID { get; set; }
         public List<RecipeSteps> Steps { get; set; }
         public List<RecipeIngredientsModel> Ingredients { get; set; }
         

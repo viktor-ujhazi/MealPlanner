@@ -92,7 +92,7 @@ namespace MealPlannerMVC.Services
             return steps;
         }
 
-        private List<RecipeIngredientsModel> GetIngredients(int id)
+        public List<RecipeIngredientsModel> GetIngredients(int id)
         {
             List<RecipeIngredientsModel> ingredientsModels = new List<RecipeIngredientsModel>();
             using var command = _connection.CreateCommand();
@@ -142,6 +142,28 @@ namespace MealPlannerMVC.Services
             return recipes;
         }
 
+        public List<RecipeModel> SearchRecipes(string recipename)
+        {
+            List<RecipeModel> recipes = new List<RecipeModel>();
+            using var command = _connection.CreateCommand();
+            command.CommandText = $"SELECT * FROM recipes WHERE LOWER(recipe_name) LIKE LOWER('%{recipename}%')";
+
+            using var reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                RecipeModel recipe = new RecipeModel
+                {
+                    RecipeID = (int)reader["recipe_id"],
+                    RecipeName = (string)reader["recipe_name"],
+                    Description = (string)reader["description"],
+                };
+                recipes.Add(recipe);
+
+            }
+
+            return recipes;
+        }
         public List<RecipeIngredientsModel> GetALLIngredients()
         {
             List<RecipeIngredientsModel> ingredients = new List<RecipeIngredientsModel>();
@@ -215,17 +237,23 @@ namespace MealPlannerMVC.Services
             IngredientUnitsParam.ParameterName = "i_measurement_unit";
             IngredientUnitsParam.Value = getIngredientUnit(newRecipe.Ingredients);
 
-                                            
-            command.CommandText = "SELECT new_recipe(@recipeName, @recipeDescription,  @step_numbers, @steps, @i_name, @i_quantity, @i_measurement_unit)";
+            var UserIdParam = command.CreateParameter();
+            UserIdParam.ParameterName = "u_id";
+            UserIdParam.Value = newRecipe.UserID;
+
+
+            command.CommandText = "SELECT new_recipe(@recipeName, @recipeDescription, @u_id, @step_numbers, @steps, @i_name, @i_quantity, @i_measurement_unit)";
 
             command.Parameters.Add(recipeNameParam);
             command.Parameters.Add(descriptionParam);
+            command.Parameters.Add(UserIdParam);
             command.Parameters.Add(stepNumbersParam);
             command.Parameters.Add(stepsParam);
             command.Parameters.Add(IngredientNamesParam);
             command.Parameters.Add(IngredientQuantitiesParam);
             command.Parameters.Add(IngredientUnitsParam);
-                                 
+
+
             command.ExecuteNonQuery();
         }
         private int[] getStepnumbers(List<RecipeSteps> recipeSteps)
