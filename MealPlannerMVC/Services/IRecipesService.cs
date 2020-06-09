@@ -12,5 +12,6 @@ namespace MealPlannerMVC.Services
         void AddRecipe(string jsonRecipe);
         List<RecipeModel> SearchRecipes(string recipename);
         List<RecipeIngredientsModel> GetIngredients(int id);
+        
     }
 }

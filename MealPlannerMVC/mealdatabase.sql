@@ -6,7 +6,7 @@ DROP TABLE IF EXISTS measurement_quantities CASCADE;
 DROP TABLE IF EXISTS measurement_units CASCADE;
 DROP TABLE IF EXISTS recipe_ingredients CASCADE;
 DROP TABLE IF EXISTS steps CASCADE;
---DROP TABLE IF EXISTS shops CASCADE;
+DROP TABLE IF EXISTS shopping_list CASCADE;
 DROP TABLE IF EXISTS shop_inventory CASCADE;
 DROP TABLE IF EXISTS user_inventory CASCADE;
 
@@ -24,7 +24,8 @@ CREATE TABLE users(
 CREATE TABLE recipes(
 	recipe_id SERIAL PRIMARY KEY,
 	recipe_name TEXT,
-	description TEXT
+	description TEXT,
+	"user_id" INTEGER NOT NULL REFERENCES users("user_id")
 	
 );
 	
@@ -58,18 +59,14 @@ CREATE TABLE recipe_ingredients(
 	
 	
 );
-/*
-CREATE TABLE shops(
-	shop_id SERIAL PRIMARY KEY,
-	shop_name TEXT,
-	city TEXT,
-	address TEXT,
-	email TEXT,
-	password TEXT,
+
+CREATE TABLE shopping_list(
+	"user_id" INTEGER NOT NULL REFERENCES users("user_id"),
+	ingredient_id INTEGER NOT NULL REFERENCES ingredients(ingredient_id)
 	
 
 );
-*/
+
 CREATE TABLE shop_inventory(
 	item_id SERIAL PRIMARY KEY,
 	ingredient_id INTEGER,
@@ -88,12 +85,44 @@ CREATE TABLE user_inventory(
 	measurement_unit_id INTEGER
 );
 
+CREATE OR REPLACE FUNCTION check_item_in_shopping_list() RETURNS TRIGGER AS $$
+DECLARE count_ingredient INTEGER;
+BEGIN
 
-CREATE OR REPLACE FUNCTION add_recipe(r_name TEXT, r_description TEXT) RETURNS void AS $$
+	SELECT COUNT(*) FROM shopping_list WHERE "user_id" = NEW.user_id AND ingredient_id = NEW.ingredient_id INTO count_ingredient;
+    IF count_ingredient<1 THEN
+		Raise notice 'number: %', count_ingredient;
+        RETURN NEW;
+    END IF;
+	Raise notice 'number: %', count_ingredient;
+	Return NULL;
+    
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+
+CREATE OR REPLACE FUNCTION add_to_shopping_list(u_id Integer, i_id INTEGER[]) RETURNS void AS $$
+BEGIN
+		
+	FOR i IN 1.. array_length(i_id, 1)
+	 
+	LOOP
+    	
+	INSERT INTO shopping_list ("user_id", ingredient_id) VALUES (u_id, i_id[i]);
+	
+  	END LOOP;
+
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION add_recipe(r_name TEXT, r_description TEXT, u_id INTEGER) RETURNS void AS $$
 	
 BEGIN
     
-	INSERT INTO recipes (recipe_name, description) VALUES (r_name, r_description);
+	INSERT INTO recipes (recipe_name, description, "user_id") VALUES (r_name, r_description, u_id);
 		
 END;
 $$ LANGUAGE plpgsql;
@@ -141,11 +170,11 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION new_recipe(r_name TEXT, r_description TEXT, step_numbers INT[] , steps TEXT[], i_name TEXT[], i_quantity FLOAT[], i_measurement_unit TEXT[]) RETURNS void AS $$
+CREATE OR REPLACE FUNCTION new_recipe(r_name TEXT, r_description TEXT, u_id INTEGER, step_numbers INT[] , steps TEXT[], i_name TEXT[], i_quantity FLOAT[], i_measurement_unit TEXT[]) RETURNS void AS $$
 	DECLARE new_recipe_id INTEGER;
 	
 BEGIN
-	INSERT INTO recipes (recipe_name, description) VALUES (r_name, r_description) RETURNING recipe_id into new_recipe_id;
+	INSERT INTO recipes (recipe_name, description, "user_id") VALUES (r_name, r_description, u_id) RETURNING recipe_id into new_recipe_id;
 	
 	
 	
@@ -162,9 +191,13 @@ BEGIN
 	 
 	LOOP
     	
-	SELECT add_ingredients_to_recipe(i_name[i], i_quantity[i], i_measurement_unit[i], new_recipe_id );
+	PERFORM add_ingredients_to_recipe(i_name[i], i_quantity[i], i_measurement_unit[i], new_recipe_id );
 	
   	END LOOP;
+	
+	
+	
+	
 	
 	
 
@@ -172,7 +205,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-
+CREATE TRIGGER check_item_in_shopping_list_trigger
+BEFORE INSERT ON shopping_list
+FOR EACH ROW EXECUTE FUNCTION check_item_in_shopping_list();
 
 
 
@@ -181,7 +216,7 @@ INSERT INTO users (username, email, password) VALUES ('user1', 'user1@users.com'
 INSERT INTO users (username, email, password, user_role) VALUES ('SampleShop', 'sample@shop.com', 'sample', 'shop');
 
 
-SELECT new_recipe('Palacsinta', 'Recipe 1 description', ARRAY [1, 2, 3, 4, 5, 6, 7], 
+SELECT new_recipe('Palacsinta', 'Recipe 1 description', 2, ARRAY [1, 2, 3, 4, 5, 6, 7], 
 	ARRAY ['Tegyük egy keverőtálba a lisztet, tojást, vaníliás cukrot és a sót. ',
 	'Robotgép segítségével kezdjük el keverni, majd folyamatosan adjuk hozzá a tejet és végül az olvasztott vajat. Addig keverjük, míg sima palacsintatésztát nem kapunk.',
 	'Takarjuk le, és hűtőszekrényben pihentessük 2 órán át.  A tészta akkor jó, ha állaga a főzőtejszín sűrűségéhez hasonlít. (Ha szükséges, kis tejjel higíthatjuk.)',
@@ -220,7 +255,7 @@ SELECT add_ingredients_to_recipe('vaj', 40, 'g', 1);
 SELECT add_ingredients_to_recipe('napraforgó olaj', 6, 'teáskanál', 1);
 */
 
-SELECT add_recipe('Madártej', 'Recipe 2 description');
+SELECT add_recipe('Madártej', 'Recipe 2 description', 2);
 
 SELECT add_steps_to_recipe(1, 'A tojásfehérjét egy csipet sóval kezdjük el kemény habbá verni, majd adjuk hozzá a két evőkanál porcukrot, és verjük teljesen keményre.', 2);
 SELECT add_steps_to_recipe(2, 'A tejhez adjuk hozzá a vaníliarúd kikapart magjait, majd forraljuk fel fel, és kanállal szaggassuk bele a tojáshabból galuskákat. Két-három percig főzzük, majd óvatosan for- dítsuk meg, újabb két-három perc, és már szedhetjük is ki egy üres tálba.', 2);
@@ -236,3 +271,13 @@ SELECT add_ingredients_to_recipe('tojássárgája', 4, 'db', 2);
 SELECT add_ingredients_to_recipe('cukor', 70, 'g', 2);
 
 INSERT INTO shop_store (ingredient_id, item_name, shop_id, price, currency) VALUES (5, 'tej 2,8%', 3, 240, 'HUF');
+
+/*
+INSERT INTO shopping_list ("user_id", ingredient_id) VALUES (2, 1);
+INSERT INTO shopping_list ("user_id", ingredient_id) VALUES (2, 2);
+INSERT INTO shopping_list ("user_id", ingredient_id) VALUES (2, 1);
+INSERT INTO shopping_list ("user_id", ingredient_id) VALUES (2, 2);
+INSERT INTO shopping_list ("user_id", ingredient_id) VALUES (2, 4);
+*/
+
+

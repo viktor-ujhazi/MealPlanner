@@ -49,6 +49,7 @@ function newIngredient() {
     //element.insertAdjacentHTML('beforeend', newHtml);
 
     let quantity_input = document.createElement('input');
+    quantity_input.setAttribute('type', 'number');
     quantity_input.setAttribute('class', 'add__ingredient_quantity');
     quantity_input.setAttribute('placeholder', 'Quantity');
 

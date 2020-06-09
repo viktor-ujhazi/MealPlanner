@@ -2,12 +2,49 @@
 
 .left_panel {
     margin: auto;
-        
+    width: 80%;    
     float: left;
 }
 
 .right_panel {
+    height: 100%;
     margin: auto;
     float: right;
     margin-right: 5px;
+}
+
+[class^="add__"] {
+    margin: 5px;
+    min-width: 100px;
+}
+
+[id^="del_list_item"] {
+    width: 15px;
+}
+
+[id^="button_add-"] {
+    float: right;
+}
+
+.recipe_list_item{
+    margin: 10px;
+}
+
+ul.list_of_ingredients li {
+    display: inline;
+}
+
+
+.add__ingredient_quantity {
+    width: 100px;
+}
+
+.inline_ingredients{
+    margin-right:5px;
+}
+
+.step_text {
+    width: 1000px;
+    height: 30px;
+    height: auto;
 }

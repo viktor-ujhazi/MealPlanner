@@ -50,10 +50,12 @@ namespace MealPlannerMVC
                 connection.Open();
                 return connection;
             });
-            services.AddScoped<IRecipesService, SQLRecipesService>();
+            services.AddScoped<IRecipesService, SQLRecipesService>(); 
             services.AddScoped<IAccountsService, SQLAccountsService>();
             services.AddScoped<IShopInventoryService, SQLShopInventoryService>();
             services.AddScoped<IUserInventoryService, SQLUserInventoryService>();
+            services.AddScoped<IShoppingListsService, SQLShoppingListsService>();
+
 
 
 

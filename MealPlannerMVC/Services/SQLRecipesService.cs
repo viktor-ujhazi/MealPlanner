@@ -152,15 +152,23 @@ namespace MealPlannerMVC.Services
 
             while (reader.Read())
             {
+                int recipeID = (int)reader["recipe_id"];
                 RecipeModel recipe = new RecipeModel
                 {
-                    RecipeID = (int)reader["recipe_id"],
+                    RecipeID = recipeID,
                     RecipeName = (string)reader["recipe_name"],
-                    Description = (string)reader["description"],
+                    Description = (string)reader["description"]
+                    
                 };
                 recipes.Add(recipe);
 
             }
+            reader.Close();
+            foreach (var recipe in recipes)
+            {
+                recipe.Ingredients = GetIngredients(recipe.RecipeID);
+            }
+
 
             return recipes;
         }
@@ -256,6 +264,8 @@ namespace MealPlannerMVC.Services
 
             command.ExecuteNonQuery();
         }
+
+
         private int[] getStepnumbers(List<RecipeSteps> recipeSteps)
         {
             
@@ -321,5 +331,6 @@ namespace MealPlannerMVC.Services
 
             return resultArray;
         }
+
     }
 }
