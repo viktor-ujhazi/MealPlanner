@@ -5,12 +5,19 @@ document.addEventListener("DOMContentLoaded", () => {
     let searchRecipeButton = document.querySelector(".btn_search_recipename");
     searchRecipeButton.addEventListener("click", searchRecipeName);
 
-    let searchIngredientButton = document.querySelector(".btn_search_ingredient");
-    searchIngredientButton.addEventListener("click", searchIngredientName);
+    //let searchIngredientButton = document.querySelector(".btn_search_ingredient");
+    //searchIngredientButton.addEventListener("click", searchIngredientName);
 
+    let searchPricesButton = document.querySelector(".search_prices_button");
+    searchPricesButton.addEventListener("click", searchPricesForIngredients);
         
 });
 window.onload = () => {
+    getShoppingList();
+    getPlannedRecipes();
+};
+
+function getShoppingList() {
     let xhr = new XMLHttpRequest();
     if (xhr != null) {
         xhr.onreadystatechange = function () {
@@ -26,7 +33,24 @@ window.onload = () => {
     }
     xhr.open('GET', 'GetShoppingList', true);
     xhr.send();
-};
+}
+
+function getPlannedRecipes() {
+    let xhr = new XMLHttpRequest();
+    if (xhr != null) {
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                               
+                let recipes = JSON.parse(xhr.response);
+                DisplayPlannedRecipes(recipes);
+
+            }
+        }
+    }
+    xhr.open('GET', 'GetPlannedRecipes', true);
+    xhr.send();
+}
+
 
 
 function searchRecipeName() {
@@ -64,17 +88,7 @@ function CreateRecipeList(recipes) {
     while (element.firstChild) {
         element.removeChild(element.lastChild);
     }
-
-    //let result = document.createElement('div');
-    //result.setAttribute('class', '.search_results')
-    
-    //var para = document.createElement("p");
-    //var node = document.createTextNode("Results: ");
-    //para.appendChild(node);
-    //result.appendChild(para);
-   
-    //element.appendChild(result)
-
+        
     for (var i = 0; i < recipes.length; i++) {
         let recipeId = recipes[i].recipeID;
         
@@ -124,15 +138,13 @@ function AddToShoppingList(recipeId) {
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4 && xhr.status === 200) {
 
-                console.log("ingredients");
-                console.log(xhr.responseText);
-                let ingredients = JSON.parse(xhr.response);
-                DisplayShoppingList(ingredients);
+                getShoppingList();
+                getPlannedRecipes();
 
             }
         }
     }
-    xhr.open('POST', 'AddToShoppingList', true);
+    xhr.open('POST', 'AddToPlannedMeals', true);
     xhr.send(data);
 
 
@@ -164,6 +176,32 @@ function DisplayShoppingList(ingredients) {
     }
 }
 
+function DisplayPlannedRecipes(recipes) {
+    let element = document.querySelector('.planned_list_items');
+
+    while (element.firstChild) {
+        element.removeChild(element.lastChild);
+    }
+
+
+    for (var i = 0; i < recipes.length; i++) {
+        let recipeId = recipes[i].recipeID;
+        let listItem = document.createElement('li');
+        listItem.setAttribute('id', `planned_recipe_list_item-${recipeId}`);
+        let delButton = document.createElement('img');
+        delButton.setAttribute('id', `del_list_item-${recipeId}`);
+        delButton.setAttribute('src', '/images/trashcan.png');
+        delButton.addEventListener("click", () => {
+            deleteItemFromPlannedRecipes(recipeId);
+        });
+
+        listItem.innerHTML = `${recipes[i].recipeName}`;
+
+        listItem.appendChild(delButton);
+        element.appendChild(listItem);
+    }
+}
+
 function deleteItemFromShoppingList(ingredientID) {
     let data = new FormData();
     data.append('ingredientID', ingredientID);
@@ -180,4 +218,85 @@ function deleteItemFromShoppingList(ingredientID) {
     }
     xhr.open('POST', 'DeleteFromShoppingList', true);
     xhr.send(data);
+}
+
+function deleteItemFromPlannedRecipes(recipeId) {
+    let data = new FormData();
+    data.append('recipeID', recipeId);
+
+    let xhr = new XMLHttpRequest();
+    if (xhr != null) {
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+
+                let element = document.querySelector(`#planned_recipe_list_item-${recipeId}`);
+                element.remove();
+                getShoppingList();
+
+            }
+        }
+    }
+    xhr.open('POST', 'DeleteFromPlannedRecipes', true);
+    xhr.send(data);
+}
+
+function searchPricesForIngredients() {
+    let xhr = new XMLHttpRequest();
+    if (xhr != null) {
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+
+                console.log(xhr.responseText);
+                let prices = JSON.parse(xhr.response);
+                displayPrices(prices);
+            }
+        }
+    }
+    xhr.open('POST', 'GetPrices', true);
+    xhr.send();
+}
+
+function displayPrices(prices) {
+
+    let recipeListElement = document.querySelector('.Recipe_list_items');
+    while (recipeListElement.firstChild) {
+        recipeListElement.removeChild(recipeListElement.lastChild);
+    }
+    let element = document.querySelector('.Price_list_items');
+    while (element.firstChild) {
+        element.removeChild(element.lastChild);
+    }
+
+    for (var i = 0; i < prices.length; i++) {
+        let listItemID = prices[i].ingredientID;
+
+        let priceListItem = document.createElement('div');
+        priceListItem.setAttribute('class', 'price_list_item');
+        priceListItem.setAttribute('id', `ingredient_item-${listItemID}`);
+
+        let listElementIngredientname = document.createElement('li');
+        listElementIngredientname.innerHTML = "Ingredient name: " + prices[i].ingredientName;
+        
+        let ulElement = document.createElement('ul');
+        listElementIngredientname.appendChild(ulElement);
+               
+        let detailShop = document.createElement('li');
+        detailShop.innerHTML = "Shop name: " + prices[i].shopName;
+        ulElement.appendChild(detailShop);
+
+        let detailItemName = document.createElement('li');
+        detailItemName.innerHTML = "Product name: " + prices[i].itemName;
+        ulElement.appendChild(detailItemName);
+
+        let detailPrice = document.createElement('li');
+        detailPrice.innerHTML = "Price: " + prices[i].price + " " + prices[i].currency;
+        ulElement.appendChild(detailPrice);
+
+
+
+
+        priceListItem.appendChild(listElementIngredientname);
+        
+        element.appendChild(priceListItem);
+    }
 }

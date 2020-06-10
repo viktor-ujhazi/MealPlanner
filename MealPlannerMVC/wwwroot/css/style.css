@@ -8,10 +8,35 @@
 
 .right_panel {
     height: 100%;
-    margin: auto;
+    width: 20%;
     float: right;
-    margin-right: 5px;
+    
+    border-style: groove;
+    border-width: 3px;
 }
+
+.meal-list {
+    margin: 2px;
+    border-style: groove;
+    border-width: 3px;
+}
+.shopping-list {
+    margin: 2px;
+    border-style: groove;
+    border-width: 3px;
+}
+
+.right_panel nav ul {
+    height: 200px;
+    width: 100%;
+}
+
+.right_panel nav ul {
+    overflow: hidden;
+    overflow-y: scroll;
+}
+
+
 
 [class^="add__"] {
     margin: 5px;

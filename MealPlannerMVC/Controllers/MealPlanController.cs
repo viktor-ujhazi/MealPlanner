@@ -45,15 +45,24 @@ namespace MealPlannerMVC.Controllers
             return Json(ingredients);
         }
 
-        public IActionResult AddToShoppingList()
+        public IActionResult AddToPlannedMeals()
         {
             int userID = Convert.ToInt32(HttpContext.User.FindFirst("Id").Value);
             int recipeID = Convert.ToInt32(Request.Form["recipeID"]);
-            var ingredients = _shoppingListsService.AddToShoppingList(userID, recipeID);
+            var recipeNames = _shoppingListsService.AddToPlannedMeals(userID, recipeID);
 
-            return Json(ingredients);
-
+            return Json("OK");
         }
+
+        //public IActionResult AddToShoppingList()
+        //{
+        //    int userID = Convert.ToInt32(HttpContext.User.FindFirst("Id").Value);
+        //    int recipeID = Convert.ToInt32(Request.Form["recipeID"]);
+        //    var ingredients = _shoppingListsService.AddToShoppingList(userID, recipeID);
+
+        //    return Json(ingredients);
+
+        //}
 
         public IActionResult GetShoppingList()
         {
@@ -64,7 +73,16 @@ namespace MealPlannerMVC.Controllers
 
 
         }
+        
+        public IActionResult GetPlannedRecipes()
+        {
+            int userID = Convert.ToInt32(HttpContext.User.FindFirst("Id").Value);
+            var recipes = _shoppingListsService.GetPlannedRecipes(userID);
 
+            return Json(recipes);
+
+
+        }
         public IActionResult DeleteFromShoppingList() 
         {
             int ingredientID = Convert.ToInt32(Request.Form["ingredientID"]);
@@ -72,5 +90,26 @@ namespace MealPlannerMVC.Controllers
 
             return Json("OK");
         }
+        
+        public IActionResult DeleteFromPlannedRecipes()
+        {
+            int recipeID = Convert.ToInt32(Request.Form["recipeID"]);
+            _shoppingListsService.DeleteFromPlannedRecipes(recipeID);
+
+            return Json("OK");
+        }
+
+        public IActionResult GetPrices()
+        {
+            int userID = Convert.ToInt32(HttpContext.User.FindFirst("Id").Value);
+            var prices = _shoppingListsService.GetPriceForIngredients(userID); //get_price_for_ingredient(u_id INTEGER)
+
+            return Json(prices);
+
+
+        }
+        
+
+
     }
 }

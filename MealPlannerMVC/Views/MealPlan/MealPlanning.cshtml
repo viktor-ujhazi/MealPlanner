@@ -8,7 +8,7 @@
 </head>
 <body>
 
-    
+
     <h2>Meal Planning</h2>
     <div class="left_panel">
         <div>
@@ -16,31 +16,48 @@
             <input type="text" class="search__recipename" placeholder="search">
             <button class="btn_search_recipename">Search</button>
         </div>
-        <div>
+        @*<div>
             <label>Search by ingredient name</label>
             <input type="text" class="search__ingredient" placeholder="search">
             <button class="btn_search_ingredient">Search</button>
-        </div>
+        </div>*@
 
-        <div class="Recipe_list">
-            <h3 class="result_text">Result</h3>
-            <ul class="Recipe_list_items">
+    <div class="Result_list">
+        <h3 class="result_text">Result</h3>
+        <ul class="Recipe_list_items">
+        </ul>
+        <ul class="Price_list_items">
+        </ul>
 
-            </ul>
-
-        </div>
-             
     </div>
 
+    </div>
     <div class="right_panel">
-        <h4>Shopping List:</h4>
-        <div class="shopping_list" onload="">
-            <ul class="shopping_list_items">
-                
-            </ul>
+        <div><button class="search_prices_button">Search prices</button></div>
+        <div class="meal-list">
+            <h4>Planned Meals</h4>
+            <div class="planned_list" onload="">
+                <nav>
+                    <ul class="planned_list_items">
+                        
+
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+        <div class="shopping-list">
+            <h4>Shopping List</h4>
+            <div class="shopping_list" onload="">
+                <nav>
+                    <ul class="shopping_list_items">
+                    </ul>
+                </nav>
+            </div>
         </div>
     </div>
     
+
     <script src="~/js/mealPlanning.js"></script>
 
 </body>

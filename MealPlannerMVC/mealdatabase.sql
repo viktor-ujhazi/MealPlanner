@@ -9,6 +9,8 @@ DROP TABLE IF EXISTS steps CASCADE;
 DROP TABLE IF EXISTS shopping_list CASCADE;
 DROP TABLE IF EXISTS shop_inventory CASCADE;
 DROP TABLE IF EXISTS user_inventory CASCADE;
+DROP TABLE IF EXISTS planned_meals CASCADE;
+
 
 CREATE TABLE users(
 	"user_id" SERIAL PRIMARY KEY,
@@ -64,7 +66,12 @@ CREATE TABLE shopping_list(
 	"user_id" INTEGER NOT NULL REFERENCES users("user_id"),
 	ingredient_id INTEGER NOT NULL REFERENCES ingredients(ingredient_id)
 	
+);
 
+CREATE TABLE planned_meals(
+	"user_id" INTEGER NOT NULL REFERENCES users("user_id"),
+	recipe_id INTEGER NOT NULL REFERENCES recipes(recipe_id)
+	
 );
 
 CREATE TABLE shop_inventory(
@@ -75,7 +82,6 @@ CREATE TABLE shop_inventory(
 	price FLOAT,
 	currency TEXT
 	
-
 );
 
 CREATE TABLE user_inventory(
@@ -84,6 +90,32 @@ CREATE TABLE user_inventory(
 	measurement_quantity_id INTEGER,
 	measurement_unit_id INTEGER
 );
+
+CREATE OR REPLACE FUNCTION delete_items_from_shopping_list() RETURNS TRIGGER AS $$
+DECLARE ingredient_ids INTEGER[];
+BEGIN
+	SELECT ARRAY(
+	SELECT shopping_list.ingredient_id FROM shopping_list
+	WHERE user_id=2
+	except
+	SELECT recipe_ingredients.ingredient_id FROM recipe_ingredients
+	JOIN planned_meals on recipe_ingredients.recipe_id = planned_meals.recipe_id 
+		and planned_meals.user_id = OLD.user_id
+	) INTO ingredient_ids;
+	
+	FOR i IN 1.. array_length(ingredient_ids, 1)
+	 
+	LOOP
+    	
+	DELETE FROM shopping_list WHERE ingredient_id = ingredient_ids[i] AND user_id = OLD.user_id;
+	
+  	END LOOP;
+	
+	RETURN NULL;
+    
+END;
+$$ LANGUAGE plpgsql;
+
 
 CREATE OR REPLACE FUNCTION check_item_in_shopping_list() RETURNS TRIGGER AS $$
 DECLARE count_ingredient INTEGER;
@@ -96,6 +128,19 @@ BEGIN
     END IF;
 	Raise notice 'number: %', count_ingredient;
 	Return NULL;
+    
+END;
+$$ LANGUAGE plpgsql;
+
+/****************************************/
+CREATE OR REPLACE FUNCTION add_to_shopping_list_after_add_meal() RETURNS TRIGGER AS $$
+DECLARE ingredient_ids INTEGER[];
+BEGIN
+
+	SELECT ARRAY(SELECT ingredient_id FROM recipe_ingredients WHERE recipe_id = NEW.recipe_id) INTO ingredient_ids;
+    PERFORM add_to_shopping_list(NEW.user_id, ingredient_ids);
+	
+	RETURN NULL;
     
 END;
 $$ LANGUAGE plpgsql;
@@ -194,26 +239,46 @@ BEGIN
 	PERFORM add_ingredients_to_recipe(i_name[i], i_quantity[i], i_measurement_unit[i], new_recipe_id );
 	
   	END LOOP;
-	
-	
-	
-	
-	
-	
+		
 
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_price_for_ingredient() RETURNS void AS $$
+
+BEGIN
+
+select distinct on (shop_inventory.ingredient_id) shop_inventory.ingredient_id, shop_inventory.item_id, min(price) as price, shop_inventory.item_name, shop_inventory.shop_id, shop_inventory.currency
+	from shop_inventory
+join shopping_list on shopping_list.ingredient_id = shop_inventory.ingredient_id
+where shopping_list.user_id = 2
+Group by shop_inventory.ingredient_id, shop_inventory.item_id, shop_inventory.item_name, shop_inventory.shop_id, shop_inventory.currency;
+
+END;
+$$ LANGUAGE plpgsql;
+
 
 
 CREATE TRIGGER check_item_in_shopping_list_trigger
 BEFORE INSERT ON shopping_list
 FOR EACH ROW EXECUTE FUNCTION check_item_in_shopping_list();
 
+CREATE TRIGGER add_to_shopping_list_after_add_meal_trigger
+AFTER INSERT ON planned_meals
+FOR EACH ROW EXECUTE FUNCTION add_to_shopping_list_after_add_meal();
+
+
+CREATE TRIGGER delete_items_from_shopping_list_trigger
+AFTER DELETE ON planned_meals
+FOR EACH ROW EXECUTE FUNCTION delete_items_from_shopping_list();
+
+
 
 
 INSERT INTO users (username, email, password, user_role) VALUES ('admin', 'admin@admin.com', 'admin', 'admin');
 INSERT INTO users (username, email, password) VALUES ('user1', 'user1@users.com', 'user1');
 INSERT INTO users (username, email, password, user_role) VALUES ('SampleShop', 'sample@shop.com', 'sample', 'shop');
+INSERT INTO users (username, email, password, user_role) VALUES ('Mari Néni kisbótja', 'mari@shop.com', 'mari', 'shop');
 
 
 SELECT new_recipe('Palacsinta', 'Recipe 1 description', 2, ARRAY [1, 2, 3, 4, 5, 6, 7], 
@@ -231,7 +296,6 @@ SELECT new_recipe('Palacsinta', 'Recipe 1 description', 2, ARRAY [1, 2, 3, 4, 5,
 	
 	
 	);
-
 
 
 /*
@@ -270,7 +334,23 @@ SELECT add_ingredients_to_recipe('vanília', 1, 'db', 2);
 SELECT add_ingredients_to_recipe('tojássárgája', 4, 'db', 2);
 SELECT add_ingredients_to_recipe('cukor', 70, 'g', 2);
 
-INSERT INTO shop_store (ingredient_id, item_name, shop_id, price, currency) VALUES (5, 'tej 2,8%', 3, 240, 'HUF');
+INSERT INTO shop_inventory (ingredient_id, item_name, shop_id, price, currency) VALUES (5, 'Tej 2,8%', 3, 240, 'HUF');
+INSERT INTO shop_inventory (ingredient_id, item_name, shop_id, price, currency) VALUES (1, 'Valamilyen liszt', 3, 180, 'HUF');
+INSERT INTO shop_inventory (ingredient_id, item_name, shop_id, price, currency) VALUES (6, 'Tea vaj', 3, 165, 'HUF');
+INSERT INTO shop_inventory (ingredient_id, item_name, shop_id, price, currency) VALUES (2, 'Tojás M', 3, 30, 'HUF');
+INSERT INTO shop_inventory (ingredient_id, item_name, shop_id, price, currency) VALUES (12, 'Kristálycukor', 3, 240, 'HUF');
+
+INSERT INTO shop_inventory (ingredient_id, item_name, shop_id, price, currency) VALUES (5, 'Tej 1,4%', 4, 220, 'HUF');
+INSERT INTO shop_inventory (ingredient_id, item_name, shop_id, price, currency) VALUES (1, 'Liszt', 4, 185, 'HUF');
+INSERT INTO shop_inventory (ingredient_id, item_name, shop_id, price, currency) VALUES (6, 'Vaj', 4, 160, 'HUF');
+INSERT INTO shop_inventory (ingredient_id, item_name, shop_id, price, currency) VALUES (2, 'Tojás Házi', 4, 32, 'HUF');
+INSERT INTO shop_inventory (ingredient_id, item_name, shop_id, price, currency) VALUES (12, 'Kristálycukor', 4, 240, 'HUF');
+
+
+INSERT INTO planned_meals ("user_id", recipe_id) VALUES (2, 2);
+
+
+
 
 /*
 INSERT INTO shopping_list ("user_id", ingredient_id) VALUES (2, 1);
