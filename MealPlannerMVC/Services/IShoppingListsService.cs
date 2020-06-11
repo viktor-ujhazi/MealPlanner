@@ -10,7 +10,7 @@ namespace MealPlannerMVC.Services
         List<RecipeIngredientsModel> GetShoppingList(int userID);
         List<RecipeModel> AddToPlannedMeals(int userID, int recipeID);
         List<RecipeModel> GetPlannedRecipes(int userID);
-        void DeleteFromPlannedRecipes(int recipeID);
+        void DeleteFromPlannedRecipes(int userID, int recipeID);
         List<IngredientPriceModel> GetPriceForIngredients(int userID);
     }
 }

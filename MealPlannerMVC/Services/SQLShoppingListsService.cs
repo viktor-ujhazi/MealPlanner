@@ -163,7 +163,7 @@ namespace MealPlannerMVC.Services
 
             command.ExecuteNonQuery();
         }
-        public void DeleteFromPlannedRecipes(int recipeID)
+        public void DeleteFromPlannedRecipes(int userID, int recipeID)
         {
             using var command = _connection.CreateCommand();
 
@@ -171,7 +171,7 @@ namespace MealPlannerMVC.Services
             recipeIdParam.ParameterName = "ingredient_id";
             recipeIdParam.Value = recipeID;
 
-            command.CommandText = $"DELETE FROM planned_meals WHERE recipe_id={recipeID}";
+            command.CommandText = $"DELETE FROM planned_meals WHERE recipe_id={recipeID} AND user_id={userID}";
 
             command.Parameters.Add(recipeIdParam);
 

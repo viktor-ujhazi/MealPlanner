@@ -96,14 +96,14 @@ DECLARE ingredient_ids INTEGER[];
 BEGIN
 	SELECT ARRAY(
 	SELECT shopping_list.ingredient_id FROM shopping_list
-	WHERE user_id=2
+	WHERE user_id = OLD.user_id
 	except
 	SELECT recipe_ingredients.ingredient_id FROM recipe_ingredients
 	JOIN planned_meals on recipe_ingredients.recipe_id = planned_meals.recipe_id 
 		and planned_meals.user_id = OLD.user_id
 	) INTO ingredient_ids;
 	
-	IF array_length(ingredient_ids)>0 THEN
+	IF array_upper(ingredient_ids,1)>0 THEN
 	
 	FOR i IN 1.. array_length(ingredient_ids, 1)
 	 
@@ -217,6 +217,21 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION check_ingredient(i_name TEXT) RETURNS INTEGER AS $$
+DECLARE i_name_id_exist INTEGER;
+BEGIN
+	SELECT ingredient_id FROM ingredients WHERE i_name = ingredients.ingredient_name into i_name_id_exist;
+        
+	IF i_name_id_exist > 0 THEN
+        RETURN i_name_id_exist;
+    ELSE
+		INSERT INTO ingredients (ingredient_name) VALUES (i_name) RETURNING ingredient_id into i_name_id_exist;
+		RETURN i_name_id_exist;
+	END IF;
+
+END;
+$$ LANGUAGE plpgsql;
+
 
 CREATE OR REPLACE FUNCTION new_recipe(r_name TEXT, r_description TEXT, u_id INTEGER, step_numbers INT[] , steps TEXT[], i_name TEXT[], i_quantity FLOAT[], i_measurement_unit TEXT[]) RETURNS void AS $$
 	DECLARE new_recipe_id INTEGER;
@@ -260,7 +275,16 @@ Group by shop_inventory.ingredient_id, shop_inventory.item_id, shop_inventory.it
 END;
 $$ LANGUAGE plpgsql;
 
-
+CREATE OR REPLACE FUNCTION check_item_in_planned_meals() RETURNS TRIGGER AS $$
+DECLARE check_exist INTEGER;
+BEGIN
+	SELECT COUNT(*) FROM planned_meals WHERE user_id = NEW.user_id AND recipe_id = NEW.recipe_id INTO check_exist;
+	IF check_exist > 0 THEN
+	RETURN NULL;
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 CREATE TRIGGER check_item_in_shopping_list_trigger
 BEFORE INSERT ON shopping_list
@@ -275,7 +299,9 @@ CREATE TRIGGER delete_items_from_shopping_list_trigger
 AFTER DELETE ON planned_meals
 FOR EACH ROW EXECUTE FUNCTION delete_items_from_shopping_list();
 
-
+CREATE TRIGGER check_item_in_planned_meals_trigger
+BEFORE INSERT ON planned_meals
+FOR EACH ROW EXECUTE FUNCTION check_item_in_planned_meals();
 
 
 INSERT INTO users (username, email, password, user_role) VALUES ('admin', 'admin@admin.com', 'admin', 'admin');

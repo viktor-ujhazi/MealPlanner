@@ -93,8 +93,9 @@ namespace MealPlannerMVC.Controllers
         
         public IActionResult DeleteFromPlannedRecipes()
         {
+            int userID = Convert.ToInt32(HttpContext.User.FindFirst("Id").Value);
             int recipeID = Convert.ToInt32(Request.Form["recipeID"]);
-            _shoppingListsService.DeleteFromPlannedRecipes(recipeID);
+            _shoppingListsService.DeleteFromPlannedRecipes(userID, recipeID);
 
             return Json("OK");
         }
