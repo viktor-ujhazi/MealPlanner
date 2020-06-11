@@ -208,7 +208,38 @@ namespace MealPlannerMVC.Services
 
                 prices.Add(price);
             }
+            command.Dispose();
+            reader.Close();
+            GetIngredientsNameByID(prices);
+            GetShopsNameByID(prices);
             return prices;
+        }
+
+        private void GetIngredientsNameByID(List<IngredientPriceModel> prices)
+        {
+            foreach (var item in prices)
+            {
+                using var command = _connection.CreateCommand();
+                command.CommandText = $"SELECT ingredient_name FROM ingredients WHERE ingredient_id={item.IngredientID}";
+                using var reader = command.ExecuteReader();
+                reader.Read();
+                item.IngredientName = (string)reader["ingredient_name"];
+                reader.Close();
+                command.Dispose();
+            }
+        }
+        private void GetShopsNameByID(List<IngredientPriceModel> prices)
+        {
+            foreach (var item in prices)
+            {
+                using var command = _connection.CreateCommand();
+                command.CommandText = $"SELECT username FROM users WHERE user_id={item.ShopID}";
+                using var reader = command.ExecuteReader();
+                reader.Read();
+                item.ShopName = (string)reader["username"];
+                reader.Close();
+                command.Dispose();
+            }
         }
     }
 }
