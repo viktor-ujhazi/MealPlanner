@@ -39,10 +39,33 @@ namespace MealPlannerMVC.Controllers
             return View(inventoryItem);
         }
         [HttpPost]
-        public IActionResult Edit(int inventoryItemID, ShopInventoryModel inventoryItem)
+        public IActionResult Edit(int id, ShopInventoryModel inventoryItem)
         {
             
-            _inventoryService.UpdateItem(inventoryItem);
+            _inventoryService.UpdateItem(id, inventoryItem);
+
+            return RedirectToAction("Inventory", "ShopInventory");
+        }
+        [HttpGet]
+        public IActionResult Create()
+        {
+            
+            return View();
+        }
+        [HttpPost]
+        public IActionResult Create(ShopInventoryModel inventoryItem)
+        {
+            var shopID = Convert.ToInt32(HttpContext.User.FindFirst("Id").Value);
+            inventoryItem.ShopID = shopID;
+            _inventoryService.AddItem(inventoryItem);
+
+            return RedirectToAction("Inventory", "ShopInventory");
+        }
+        [HttpGet]
+        public IActionResult Delete(int id)
+        {
+            _inventoryService.DeleteItem(id);
+
 
             return RedirectToAction("Inventory", "ShopInventory");
         }

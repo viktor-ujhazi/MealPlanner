@@ -6,7 +6,9 @@ namespace MealPlannerMVC.Services
     public interface IShopInventoryService
     {
         List<ShopInventoryModel> GetAllItem(int shopID);
-        public ShopInventoryModel GetItemByID(int inventoryItemID);
-        public void UpdateItem(ShopInventoryModel inventoryItem);
+        ShopInventoryModel GetItemByID(int inventoryItemID);
+        void UpdateItem(int inventoryItemID, ShopInventoryModel inventoryItem);
+        void AddItem(ShopInventoryModel inventoryItem);
+        void DeleteItem(int id);
     }
 }

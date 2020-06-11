@@ -64,9 +64,104 @@ namespace MealPlannerMVC.Services
             return inventoryItem;
         }
 
-        public void UpdateItem(ShopInventoryModel inventoryItem)
+        public void UpdateItem(int inventoryItemID, ShopInventoryModel inventoryItem)
         {
+            int ingredientID = GetIngredientID(inventoryItem.ItemCategory);
 
+
+            using var command = _connection.CreateCommand();
+
+            var ingredientIDParam = command.CreateParameter();
+            ingredientIDParam.ParameterName = "ingredient_id";
+            ingredientIDParam.Value = ingredientID;
+
+            var itemNameParam = command.CreateParameter();
+            itemNameParam.ParameterName = "item_name";
+            itemNameParam.Value = inventoryItem.ItemName;
+
+            var itemIDParam = command.CreateParameter();
+            itemIDParam.ParameterName = "item_id";
+            itemIDParam.Value = inventoryItemID;
+
+            var priceParam = command.CreateParameter();
+            priceParam.ParameterName = "price";
+            priceParam.Value = inventoryItem.Price;
+
+            var currencyParam = command.CreateParameter();
+            currencyParam.ParameterName = "currency";
+            currencyParam.Value = inventoryItem.Currency;
+
+
+
+
+            command.CommandText = @"UPDATE shop_inventory SET ingredient_id = @ingredient_id , item_name = @item_name, price = @price, currency = @currency WHERE item_id = @item_id";
+            command.Parameters.Add(ingredientIDParam);
+            command.Parameters.Add(itemNameParam);
+            
+            command.Parameters.Add(priceParam);
+            command.Parameters.Add(currencyParam);
+            command.Parameters.Add(itemIDParam);
+
+
+            command.ExecuteNonQuery();
         }
+        public void AddItem(ShopInventoryModel inventoryItem) 
+        {
+            int ingredientID = GetIngredientID(inventoryItem.ItemCategory);
+
+
+            using var command = _connection.CreateCommand();
+
+            var ingredientIDParam = command.CreateParameter();
+            ingredientIDParam.ParameterName = "ingredient_id";
+            ingredientIDParam.Value = ingredientID;
+
+            var itemNameParam = command.CreateParameter();
+            itemNameParam.ParameterName = "item_name";
+            itemNameParam.Value = inventoryItem.ItemName;
+
+            var shopIDParam = command.CreateParameter();
+            shopIDParam.ParameterName = "shop_id";
+            shopIDParam.Value = inventoryItem.ShopID;
+
+            var priceParam = command.CreateParameter();
+            priceParam.ParameterName = "price";
+            priceParam.Value = inventoryItem.Price;
+
+            var currencyParam = command.CreateParameter();
+            currencyParam.ParameterName = "currency";
+            currencyParam.Value = inventoryItem.Currency;
+
+
+
+
+            command.CommandText = @"INSERT INTO shop_inventory (ingredient_id, item_name, shop_id, price, currency) VALUES (@ingredient_id, @item_name, @shop_id, @price, @currency)";
+            command.Parameters.Add(ingredientIDParam);
+            command.Parameters.Add(itemNameParam);
+            command.Parameters.Add(shopIDParam);
+            command.Parameters.Add(priceParam);
+            command.Parameters.Add(currencyParam);
+           
+
+            command.ExecuteNonQuery();
+        }
+        private int GetIngredientID(string ingredientName)
+        {
+            using var command = _connection.CreateCommand();
+            command.CommandText = $"SELECT check_ingredient('{ingredientName}')";
+            using var reader = command.ExecuteReader();
+
+            reader.Read();
+            int ingredientID = (int)reader["check_ingredient"];
+            return ingredientID;
+        }
+
+        public void DeleteItem(int id)
+        {
+            using var command = _connection.CreateCommand();
+            command.CommandText = $"DELETE FROM shop_inventory WHERE item_id = {id}";
+            command.ExecuteNonQuery();
+        }
+
     }
 }

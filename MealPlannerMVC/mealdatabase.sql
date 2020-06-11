@@ -103,6 +103,8 @@ BEGIN
 		and planned_meals.user_id = OLD.user_id
 	) INTO ingredient_ids;
 	
+	IF array_length(ingredient_ids)>0 THEN
+	
 	FOR i IN 1.. array_length(ingredient_ids, 1)
 	 
 	LOOP
@@ -110,6 +112,7 @@ BEGIN
 	DELETE FROM shopping_list WHERE ingredient_id = ingredient_ids[i] AND user_id = OLD.user_id;
 	
   	END LOOP;
+	END IF;
 	
 	RETURN NULL;
     
@@ -244,14 +247,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION get_price_for_ingredient() RETURNS void AS $$
+CREATE OR REPLACE FUNCTION get_price_for_ingredient(u_id INTEGER) RETURNS void AS $$
 
 BEGIN
 
 select distinct on (shop_inventory.ingredient_id) shop_inventory.ingredient_id, shop_inventory.item_id, min(price) as price, shop_inventory.item_name, shop_inventory.shop_id, shop_inventory.currency
 	from shop_inventory
 join shopping_list on shopping_list.ingredient_id = shop_inventory.ingredient_id
-where shopping_list.user_id = 2
+where shopping_list.user_id = u_id
 Group by shop_inventory.ingredient_id, shop_inventory.item_id, shop_inventory.item_name, shop_inventory.shop_id, shop_inventory.currency;
 
 END;
